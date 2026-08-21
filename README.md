@@ -31,10 +31,29 @@ dependencies {
 }
 ```
 
-`implementation` 이라 jar 에 함께 들어갑니다(`compileOnly` 로 두면 서버에서 클래스를
-못 찾습니다). 셰이드 플러그인을 쓰신다면 셰이드 대상에 포함시켜 주세요. Bukkit 은
-플러그인마다 클래스로더가 갈리므로, 여러 플러그인이 각자 이 모듈을 품고 있어도
-충돌하지 않습니다.
+**그리고 이 모듈이 실제로 jar 안에 들어갔는지 꼭 확인하세요.** Gradle 의 기본 `java`
+플러그인은 `implementation` 의존성을 jar 에 넣어주지 않습니다. 그대로 서버에 올리면
+부팅하다 `NoClassDefFoundError` 로 죽습니다. 셰이드 플러그인을 안 쓰신다면 `jar`
+태스크에 런타임 의존성을 담아주세요.
+
+```kotlin
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.runtimeClasspath.map { cp ->
+        cp.map { if (it.isDirectory) it else zipTree(it) }
+    })
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/MANIFEST.MF")
+}
+```
+
+빌드한 뒤 확인하는 방법입니다. 4가 나와야 합니다.
+
+```bash
+unzip -l build/libs/your-plugin.jar | grep -c "kr/bibi/hintshop/license/.*class"
+```
+
+Bukkit 은 플러그인마다 클래스로더가 갈리므로, 여러 플러그인이 각자 이 모듈을 품고
+있어도 충돌하지 않습니다.
 
 `onEnable` 맨 앞에 한 줄을 넣습니다.
 
