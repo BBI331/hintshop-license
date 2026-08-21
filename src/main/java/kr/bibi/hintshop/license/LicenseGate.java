@@ -58,6 +58,67 @@ public final class LicenseGate {
     }
 
     /**
+     * 플러그인의 언어 설정(ko/en/jp/ch)에 맞춰 콘솔 문구를 고른다. 모르는 값은 영어.
+     */
+    static String norm(String language) {
+        String l = language == null ? "" : language.trim().toLowerCase();
+        if (l.startsWith("ko")) return "ko";
+        if (l.startsWith("jp") || l.startsWith("ja")) return "jp";
+        if (l.startsWith("ch") || l.startsWith("zh")) return "ch";
+        return "en";
+    }
+
+    /** 언어별 콘솔 문구. 구매자가 직접 읽는 줄들이라 번역해 둔다. */
+    static String msg(String lang, String key) {
+        return switch (norm(lang) + ":" + key) {
+            case "ko:no_license" -> "이 파일에는 라이센스 정보가 없습니다. 힌트샵 디스코드에서 상품을 직접 다운로드해 받은 파일을 사용해주세요.";
+            case "ko:not_found" -> "등록되지 않은 파일입니다. 힌트샵 디스코드에서 상품을 직접 다운로드해 받은 파일을 사용해주세요.";
+            case "ko:wrong_role" -> "이 파일은 다른 상품의 것입니다.";
+            case "ko:superseded" -> "라이센스 코드가 만료되었습니다. 힌트샵 디스코드에서 상품을 다시 다운로드해 사용해주세요.";
+            case "ko:seats_full" -> "사용 환경 한도가 가득 찼습니다. 힌트샵 디스코드의 라이센스 현황 패널에서 쓰지 않는 환경을 지우면 이 서버에서 바로 사용할 수 있습니다.";
+            case "ko:net_grace" -> "라이센스 검증 서버에 연결할 수 없어 유예 모드로 실행합니다.";
+            case "ko:net_blocked" -> "라이센스 검증 서버에 연결할 수 없고, 유예로 허용할 최근 성공 이력도 없습니다. 서버의 인터넷 연결을 확인해주세요.";
+            case "ko:verified" -> "라이센스 인증이 완료되었습니다.";
+            case "ko:verified_first" -> "라이센스 인증이 완료되었습니다. 이 서버 환경이 사용 환경으로 등록되었습니다.";
+            case "ko:runtime_off" -> "가동 중 재검증에 실패해 플러그인을 비활성화합니다.";
+            case "ko:disable" -> "플러그인을 비활성화합니다.";
+            case "jp:no_license" -> "このファイルにはライセンス情報がありません。HintSHOPのDiscordから直接ダウンロードしたファイルをご利用ください。";
+            case "jp:not_found" -> "登録されていないファイルです。HintSHOPのDiscordから直接ダウンロードしたファイルをご利用ください。";
+            case "jp:wrong_role" -> "このファイルは別の商品のものです。";
+            case "jp:superseded" -> "ライセンスコードの有効期限が切れました。HintSHOPのDiscordで商品を再ダウンロードしてご利用ください。";
+            case "jp:seats_full" -> "使用環境の上限に達しています。HintSHOPのDiscordのライセンスパネルで使っていない環境を削除すると、このサーバーですぐ使えます。";
+            case "jp:net_grace" -> "ライセンス検証サーバーに接続できないため、猶予モードで実行します。";
+            case "jp:net_blocked" -> "ライセンス検証サーバーに接続できず、猶予として認められる直近の成功記録もありません。サーバーのインターネット接続をご確認ください。";
+            case "jp:verified" -> "ライセンス認証が完了しました。";
+            case "jp:verified_first" -> "ライセンス認証が完了しました。このサーバー環境が使用環境として登録されました。";
+            case "jp:runtime_off" -> "稼働中の再検証に失敗したため、プラグインを無効化します。";
+            case "jp:disable" -> "プラグインを無効化します。";
+            case "ch:no_license" -> "此文件不包含许可证信息。请使用从 HintSHOP Discord 直接下载的文件。";
+            case "ch:not_found" -> "未注册的文件。请使用从 HintSHOP Discord 直接下载的文件。";
+            case "ch:wrong_role" -> "此文件属于其他商品。";
+            case "ch:superseded" -> "许可证代码已过期。请在 HintSHOP Discord 重新下载商品后使用。";
+            case "ch:seats_full" -> "使用环境已达上限。在 HintSHOP Discord 的许可证面板中删除不再使用的环境后，即可在此服务器上使用。";
+            case "ch:net_grace" -> "无法连接许可证验证服务器，将以宽限模式运行。";
+            case "ch:net_blocked" -> "无法连接许可证验证服务器，且没有可用于宽限的近期成功记录。请检查服务器的网络连接。";
+            case "ch:verified" -> "许可证验证完成。";
+            case "ch:verified_first" -> "许可证验证完成。此服务器环境已注册为使用环境。";
+            case "ch:runtime_off" -> "运行中重新验证失败，插件将被禁用。";
+            case "ch:disable" -> "插件将被禁用。";
+            case "en:no_license" -> "This file carries no license information. Please use the file downloaded directly from the HintSHOP Discord.";
+            case "en:not_found" -> "This file is not registered. Please use the file downloaded directly from the HintSHOP Discord.";
+            case "en:wrong_role" -> "This file belongs to a different product.";
+            case "en:superseded" -> "The license code has expired. Please download the product again from the HintSHOP Discord.";
+            case "en:seats_full" -> "The usage-environment limit is full. Remove an unused environment from the license panel in the HintSHOP Discord and this server can boot right away.";
+            case "en:net_grace" -> "Could not reach the license verification server; running in grace mode.";
+            case "en:net_blocked" -> "Could not reach the license verification server, and there is no recent successful check to allow a grace period. Check the internet connection of this server.";
+            case "en:verified" -> "License verified.";
+            case "en:verified_first" -> "License verified. This server environment has been registered as a usage environment.";
+            case "en:runtime_off" -> "Re-verification failed while running; disabling the plugin.";
+            default -> "Disabling the plugin.";
+        };
+    }
+
+    /**
      * jar 안에 심긴 라이센스 값. 없으면 빈 문자열 — 봇을 거치지 않고 얻은 파일이라는 뜻이다.
      */
     static String embeddedCode() {
@@ -80,14 +141,22 @@ public final class LicenseGate {
      *               (역할 우클릭 → ID 복사하기). 비워두면 상품 대조를 건너뛴다.
      */
     public static boolean enable(JavaPlugin plugin, String roleId) {
+        return enable(plugin, roleId, "en");
+    }
+
+    /**
+     * 언어를 함께 받는 판. language 에는 플러그인 설정값(ko/en/jp/ch)을 그대로 넘기면
+     * 되고, 구매자에게 보이는 콘솔 문구가 그 언어로 나온다.
+     */
+    public static boolean enable(JavaPlugin plugin, String roleId, String language) {
         Logger log = plugin.getLogger();
         String productRole = roleId == null ? "" : roleId.trim();
+        String lang = norm(language);
 
         String key = embeddedCode();
         if (key.isEmpty()) {
-            log.severe(PREFIX + "This file carries no license information.");
-            log.severe(PREFIX + "Please download the product directly from the HintSHOP Discord and use that file.");
-            return disable(plugin);
+            log.severe(PREFIX + msg(lang, "no_license"));
+            return disable(plugin, lang);
         }
 
         // 상태 파일은 플러그인 데이터 폴더의 data/ 하위에 둔다. 폴더가 없으면 만들어진다.
@@ -98,7 +167,7 @@ public final class LicenseGate {
             serverId = state.getOrCreateServerId();
         } catch (IOException e) {
             log.severe(PREFIX + "Could not read or create the server ID file (data/server-id.txt): " + e.getMessage());
-            return disable(plugin);
+            return disable(plugin, lang);
         }
 
         LicenseClient.Result result = LicenseClient.verify(API_URL, key, productRole, "boot", TIMEOUT_MS);
@@ -113,58 +182,42 @@ public final class LicenseGate {
         }
 
         if (result.valid()) {
-            log.info(PREFIX + ("first_activation".equals(result.reason())
-                    ? "Verified. This server environment has been registered as a usage environment."
-                    : "Verified."));
+            log.info(PREFIX + msg(lang, "first_activation".equals(result.reason())
+                    ? "verified_first" : "verified"));
             if (!state.recordSuccess(key, serverId)) {
                 log.warning(PREFIX + "Failed to save the successful verification record (only affects the offline grace period on next boot).");
             }
-            scheduleRecheck(plugin, state, key, productRole, serverId);
+            scheduleRecheck(plugin, state, key, productRole, serverId, lang);
             return true;
         }
 
         if (result.isNetworkError()) {
             long hours = state.hoursSinceLastSuccess(key, serverId);
             if (GRACE_HOURS > 0 && hours >= 0 && hours <= GRACE_HOURS) {
-                log.warning(PREFIX + "Could not reach the license verification server. The last successful"
-                        + " check was " + hours + " hours ago, so running in grace mode (grace limit "
-                        + GRACE_HOURS + " hours).");
-                scheduleRecheck(plugin, state, key, productRole, serverId);
+                log.warning(PREFIX + msg(lang, "net_grace") + " (" + hours + "h / " + GRACE_HOURS + "h)");
+                scheduleRecheck(plugin, state, key, productRole, serverId, lang);
                 return true;
             }
-            log.severe(PREFIX + "Could not reach the license verification server, and there is no recent"
-                    + " successful check to allow a grace period.");
-            log.severe(PREFIX + "Check this server's internet connection and firewall settings.");
-            return disable(plugin);
+            log.severe(PREFIX + msg(lang, "net_blocked"));
+            return disable(plugin, lang);
         }
 
-        explainRejection(log, result.reason());
-        return disable(plugin);
+        explainRejection(log, result.reason(), lang);
+        return disable(plugin, lang);
     }
 
-    private static void explainRejection(Logger log, String reason) {
+    private static void explainRejection(Logger log, String reason, String lang) {
         switch (reason) {
-            case "not_found" -> {
-                log.severe(PREFIX + "This file is not registered.");
-                log.severe(PREFIX + "Please download the product directly from the HintSHOP Discord and use that file.");
-            }
-            case "wrong_role" -> log.severe(PREFIX + "This file belongs to a different product.");
-            case "superseded" -> {
-                log.severe(PREFIX + "This file can no longer be used.");
-                log.severe(PREFIX + "Please download the product again from the HintSHOP Discord.");
-            }
-            case "seats_full" -> {
-                log.severe(PREFIX + "The usage-environment limit is full (other servers are using it).");
-                log.severe(PREFIX + "Remove an environment you no longer use from the license status panel"
-                        + " in the HintSHOP Discord and this server can boot right away."
-                        + " A seat is not freed by shutting the server down.");
-            }
+            case "not_found" -> log.severe(PREFIX + msg(lang, "not_found"));
+            case "wrong_role" -> log.severe(PREFIX + msg(lang, "wrong_role"));
+            case "superseded" -> log.severe(PREFIX + msg(lang, "superseded"));
+            case "seats_full" -> log.severe(PREFIX + msg(lang, "seats_full"));
             default -> log.severe(PREFIX + "License verification failed (reason: " + reason + ").");
         }
     }
 
     private static void scheduleRecheck(JavaPlugin plugin, LicenseState state, String key,
-            String roleId, String serverId) {
+            String roleId, String serverId, String lang) {
         long intervalTicks = RECHECK_MINUTES * 60L * 20L;
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             LicenseClient.Result r = LicenseClient.verify(API_URL, key, roleId, "heartbeat", TIMEOUT_MS);
@@ -178,8 +231,8 @@ public final class LicenseGate {
             // 확정 무효 (재발급 등) — 비활성화는 메인 스레드에서
             try {
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    explainRejection(plugin.getLogger(), r.reason());
-                    plugin.getLogger().severe(PREFIX + "Re-verification failed while running, disabling the plugin.");
+                    explainRejection(plugin.getLogger(), r.reason(), lang);
+                    plugin.getLogger().severe(PREFIX + msg(lang, "runtime_off"));
                     Bukkit.getPluginManager().disablePlugin(plugin);
                 });
             } catch (IllegalPluginAccessException e) {
@@ -188,8 +241,8 @@ public final class LicenseGate {
         }, intervalTicks, intervalTicks);
     }
 
-    private static boolean disable(JavaPlugin plugin) {
-        plugin.getLogger().severe(PREFIX + "Disabling the plugin.");
+    private static boolean disable(JavaPlugin plugin, String lang) {
+        plugin.getLogger().severe(PREFIX + msg(lang, "disable"));
         Bukkit.getPluginManager().disablePlugin(plugin);
         return false;
     }
