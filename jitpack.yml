@@ -1,0 +1,3 @@
+# JitPack 이 쓸 JDK. build.gradle.kts 가 Java 21 바이트코드를 내므로 그 이상이면 된다.
+jdk:
+  - openjdk21
