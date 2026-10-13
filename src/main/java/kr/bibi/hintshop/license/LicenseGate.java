@@ -44,6 +44,8 @@ public final class LicenseGate {
 
     /** 봇이 다운로드 때 jar 안에 심어 보내는 라이센스 값 파일 (package.py 의 LICENSE_RESOURCE). */
     private static final String LICENSE_RESOURCE = "hintshop.license";
+    /** 리소스 안에서 상품 코드를 담는 줄의 머리말 (package.py 의 license_resource_text). */
+    private static final String PRODUCT_FIELD = "product=";
 
     /** 검증 서버 접속 불가 시 마지막 성공 검증에서 이 시간까지는 임시 허용. 0 이면 즉시 차단. */
     private static final long GRACE_HOURS = 72;
@@ -119,9 +121,9 @@ public final class LicenseGate {
     }
 
     /**
-     * jar 안에 심긴 라이센스 값. 없으면 빈 문자열 — 봇을 거치지 않고 얻은 파일이라는 뜻이다.
+     * jar 안에 심긴 리소스 전문. 없으면 빈 문자열 — 봇을 거치지 않고 얻은 파일이라는 뜻이다.
      */
-    static String embeddedCode() {
+    static String embeddedResource() {
         try (InputStream in = LicenseGate.class.getResourceAsStream("/" + LICENSE_RESOURCE)) {
             if (in == null) {
                 return "";
@@ -132,25 +134,69 @@ public final class LicenseGate {
         }
     }
 
+    /** jar 안에 심긴 라이센스 값 (리소스의 첫 줄). */
+    static String embeddedCode() {
+        String raw = embeddedResource();
+        int nl = raw.indexOf('\n');
+        return (nl < 0 ? raw : raw.substring(0, nl)).trim();
+    }
+
+    /**
+     * jar 안에 심긴 상품 코드 (HT-A-00001). 봇이 다운로드할 때 라이센스 값과 함께 넣는다.
+     * 값이 없으면 빈 문자열 — 상품 코드가 생기기 전에 받아 간 파일이다.
+     *
+     * <p>예전에는 셀러가 디스코드 역할 ID 를 소스에 손으로 적었다. 숫자를 잘못 옮겨 적어
+     * 구매자 전원이 막힌 적이 있어(2026-08-21), 봇이 심는 값으로 바꿨다.
+     */
+    static String embeddedProduct() {
+        for (String line : embeddedResource().split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith(PRODUCT_FIELD)) {
+                return trimmed.substring(PRODUCT_FIELD.length()).trim();
+            }
+        }
+        return "";
+    }
+
     /**
      * 부팅 검증. true 면 계속 진행해도 된다. false 면 비활성화 처리까지 끝났으므로
      * 호출부는 그냥 return 하면 된다 (onDisable 은 null 검사를 전제해야 한다).
      *
+     * <p>상품을 가리는 값은 봇이 jar 안에 심어 보내므로 적을 것이 없다.
+     *
      * @param plugin 검증에 실패하면 꺼질 플러그인
-     * @param roleId 이 플러그인이 파는 상품에 연동된 디스코드 역할 ID
-     *               (역할 우클릭 → ID 복사하기). 비워두면 상품 대조를 건너뛴다.
      */
-    public static boolean enable(JavaPlugin plugin, String roleId) {
-        return enable(plugin, roleId, "en");
+    public static boolean enable(JavaPlugin plugin) {
+        return enable(plugin, embeddedProduct(), "en");
     }
 
     /**
      * 언어를 함께 받는 판. language 에는 플러그인 설정값(ko/en/jp/ch)을 그대로 넘기면
      * 되고, 구매자에게 보이는 콘솔 문구가 그 언어로 나온다.
      */
-    public static boolean enable(JavaPlugin plugin, String roleId, String language) {
+    public static boolean enable(JavaPlugin plugin, String language) {
+        return enable(plugin, embeddedProduct(), language);
+    }
+
+    /**
+     * 상품을 가리는 값을 직접 넘기는 판. 지금은 봇이 jar 에 심어 주므로 쓸 일이 없고,
+     * 예전처럼 디스코드 역할 ID 를 박아 둔 플러그인을 위해 남겨 둔다.
+     *
+     * @param productKey 상품 코드(HT-A-00001) 또는 예전 방식의 디스코드 역할 ID.
+     *                   비워두면 상품 대조를 건너뛴다.
+     * @deprecated 봇이 심는 값을 쓰는 {@link #enable(JavaPlugin, String)} 을 쓸 것.
+     */
+    @Deprecated
+    public static boolean enableWithKey(JavaPlugin plugin, String productKey, String language) {
+        return enable(plugin, productKey, language);
+    }
+
+    /**
+     * 실제 검증 본체. productKey 는 봇이 심은 상품 코드이거나 예전 방식의 역할 ID 다.
+     */
+    private static boolean enable(JavaPlugin plugin, String productKey, String language) {
         Logger log = plugin.getLogger();
-        String productRole = roleId == null ? "" : roleId.trim();
+        String productRole = productKey == null ? "" : productKey.trim();
         String lang = norm(language);
 
         String key = embeddedCode();

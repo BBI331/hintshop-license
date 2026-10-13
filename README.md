@@ -8,7 +8,8 @@
 구매자는 **코드를 받지도, 어디에 적지도 않습니다.**
 
 1. 구매자가 디스코드에서 상품을 다운로드합니다.
-2. 힌트샵 봇이 그 구매자 전용 값을 상품 jar 안에 `hintshop.license` 리소스로 심어 보냅니다.
+2. 힌트샵 봇이 그 구매자 전용 값과 **상품 코드**를 상품 jar 안에 `hintshop.license`
+   리소스로 심어 보냅니다.
 3. 서버가 켜지면 이 모듈이 자기 jar 에서 그 값을 읽어 검증 서버로 보냅니다.
 4. 통과하면 플러그인이 뜨고, 아니면 스스로 꺼집니다.
 
@@ -27,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.BBI331:hintshop-license:1.0.0")
+    implementation("com.github.BBI331:hintshop-license:1.2.0")
 }
 ```
 
@@ -60,20 +61,41 @@ Bukkit 은 플러그인마다 클래스로더가 갈리므로, 여러 플러그�
 ```java
 @Override
 public void onEnable() {
-    if (!LicenseGate.enable(this, "1239778236422946897")) {
-        return;   // 검증 실패 — 비활성화까지 이미 끝났다
+    if (!LicenseGate.enable(this)) {
+        return;   // 검증 실패, 비활성화까지 이미 끝났다
     }
     // ... 원래 하던 초기화
 }
 ```
 
-두 번째 인자는 **이 플러그인이 파는 상품에 연동된 디스코드 역할 ID** 입니다.
-힌트샵의 상품마다 역할이 하나씩 걸려 있고(다운로드 권한이 그 역할로 갈립니다),
-검증 서버가 그 값을 대조해서 다른 상품의 라이센스 파일을 가져다 쓰는 것을 막습니다.
-디스코드에서 역할 우클릭 → ID 복사하기로 얻습니다.
+**적어 넣을 값이 없습니다.** 어느 상품인지는 봇이 다운로드할 때 jar 안에 심어 주므로,
+셀러는 jar 을 상점에 올리기만 하면 됩니다.
+
+콘솔 문구를 플러그인 설정 언어로 내보내려면 언어를 넘깁니다 (`ko`/`en`/`jp`/`ch`).
+
+```java
+if (!LicenseGate.enable(this, config.language())) {
+    return;
+}
+```
 
 `onDisable` 에서는 아무것도 부르지 않아도 됩니다. 자리는 서버 종료로 풀리는 것이
 아니기 때문입니다.
+
+### 1.1.0 이하에서 올라오신다면
+
+예전에는 두 번째 인자로 **디스코드 역할 ID** 를 직접 적어야 했습니다.
+
+```java
+LicenseGate.enable(this, "1239778236422946897", config.language());   // 옛 방식
+```
+
+그 숫자를 지우고 위 모양으로 바꾸면 됩니다. 역할 ID 를 손으로 옮겨 적다 틀려서
+구매자 전원이 플러그인을 못 켠 사고가 있었고(2026-08-21), 상점에서 상품의 연동 역할을
+바꾸면 이미 배포된 jar 이 전부 막히는 문제도 있었습니다. 봇이 심는 값은 그런 일이
+없습니다.
+
+이미 구매자에게 나간 옛 jar 은 그대로 돌아갑니다. 검증 서버가 역할 ID 도 계속 받습니다.
 
 ## 검증에 실패하면
 
@@ -105,5 +127,5 @@ public void onEnable() {
 
 ## 관련 저장소
 
-- [hintshop](https://github.com/BBI331/hintshop) — 디스코드 봇(값을 심는 쪽)과
+- [hintshop](https://github.com/BBI331/hintshop): 디스코드 봇(값을 심는 쪽)과
   검증 서버(Cloudflare Worker)
